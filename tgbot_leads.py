@@ -25,15 +25,25 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def _load_env():
     env = {}
-    for p in [os.path.expandvars(r'%LOCALAPPDATA%\hermes\.env'), os.path.join(SCRIPT_DIR, '.env')]:
-        try:
+    # Ищем .env в папке скрипта и в home
+    paths = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'),
+        r'C:\Users\rusne\Desktop\Битрикс24\.env',
+        os.path.expandvars(r'%LOCALAPPDATA%\hermes\.env'),
+    ]
+    found = False
+    for p in paths:
+        if os.path.exists(p):
+            found = True
             with open(p, encoding='utf-8') as f:
                 for line in f:
                     line = line.strip()
                     if '=' in line and not line.startswith('#'):
                         k, v = line.split('=', 1)
                         env[k.strip()] = v.strip()
-        except FileNotFoundError: continue
+            break
+    if not found:
+        raise RuntimeError(f".env не найден. Искал: {paths}")
     return env
 
 ENV = _load_env()
