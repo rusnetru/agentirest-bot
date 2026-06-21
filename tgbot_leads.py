@@ -216,12 +216,8 @@ dp = Dispatcher()
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
     await message.answer(
-        "👋 Добро пожаловать!\n\n"
-        "Я помогу вам с подбором оборудования и расчётом спецификаций.\n"
-        "Просто опишите, что вам нужно — и я создам заявку.\n\n"
-        "Команды:\n"
-        "/deals — мои сделки\n"
-        "/help — помощь"
+        "👋 Здравствуйте!\n\n"
+        "Опишите, что нужно — подберу оборудование или посчитаю спецификацию."
     )
 
 @dp.message(Command("help"))
@@ -473,8 +469,18 @@ async def main():
     logger.info("Менеджер: %s", MANAGER_CHAT_ID)
     logger.info("=" * 50)
 
+    # Русское меню команд
+    from aiogram.types import BotCommand, BotCommandScopeDefault
+    await bot.set_my_commands([
+        BotCommand(command="start", description="🏠 Главная"),
+        BotCommand(command="deals", description="📋 Мои сделки"),
+        BotCommand(command="help", description="❓ Как работать с ботом"),
+    ], scope=BotCommandScopeDefault())
+    await bot.set_my_description("Помогаю с подбором оборудования и расчётом спецификаций. Создаю сделки в один клик.")
+    await bot.set_my_short_description("Бот для заявок и сделок")
+
     try:
-        await bot.send_message(MANAGER_CHAT_ID, "🤖 Бот v2.0 запущен. Создаю сделки, веду диалоги.")
+        await bot.send_message(MANAGER_CHAT_ID, "🤖 Бот запущен. Готов.")
     except Exception as e:
         logger.error("Стартовое сообщение: %s", e)
 
