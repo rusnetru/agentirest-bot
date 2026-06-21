@@ -25,6 +25,7 @@ import requests
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.client.session.aiohttp import AiohttpSession
 
 # ═══════════════════════════════════════════
 # КОНФИГУРАЦИЯ
@@ -32,8 +33,9 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Telegram — токен из .env (безопасность: не хранить в репозитории!)
-def _load_token():
+def _load_env():
+    """Загрузить переменные из .env файла."""
+    env = {}
     paths = [
         os.path.expandvars(r'%LOCALAPPDATA%\hermes\.env'),
         os.path.join(SCRIPT_DIR, '.env'),
@@ -43,13 +45,20 @@ def _load_token():
             with open(p, encoding='utf-8') as f:
                 for line in f:
                     line = line.strip()
-                    if 'TELEGRAM_BOT_TOKEN' in line and not line.startswith('#'):
-                        return line.split('=', 1)[1].strip()
+                    if '=' in line and not line.startswith('#'):
+                        k, v = line.split('=', 1)
+                        env[k.strip()] = v.strip()
         except FileNotFoundError:
             continue
-    raise RuntimeError("TELEGRAM_BOT_TOKEN не найден. Создайте .env файл.")
+    return env
 
-TOKEN = _load_token()
+ENV = _load_env()
+TOKEN = ENV.get("TELEGRAM_BOT_TOKEN", "")
+if not TOKEN:
+    raise RuntimeError("TELEGRAM_BOT_TOKEN не найден в .env файле")
+
+# Прокси (если указан в .env: TELEGRAM_PROXY=socks5://user:pass@host:port)
+PROXY_URL = ENV.get("TELEGRAM_PROXY", "")
 
 MANAGER_CHAT_ID = 730367961
 MANAGER_NAME = "Иван Иванов"
@@ -191,7 +200,15 @@ def extract_deal_title(text):
 # БОТ
 # ═══════════════════════════════════════════
 
-bot = Bot(token=TOKEN)
+# Создаём бота с поддержкой прокси
+if PROXY_URL:
+    from aiohttp_socks import ProxyConnector
+    connector = ProxyConnector.from_url(PROXY_URL)
+    session = AiohttpSession(connector=connector)
+    bot = Bot(token=TOKEN, session=session)
+    logger.info("Using proxy: %s", PROXY_URL.split("@")[-1] if "@" in PROXY_URL else PROXY_URL)
+else:
+    bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # ── Команды ──
