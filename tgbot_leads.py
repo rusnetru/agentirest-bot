@@ -47,8 +47,7 @@ def _load_env():
     return env
 
 ENV = _load_env()
-TOKEN = ENV.get("TELEGRAM_BOT_TOKEN", "")
-if not TOKEN: raise RuntimeError("TELEGRAM_BOT_TOKEN не найден")
+TOKEN = "8814998623:AAEvAT0i3X7YZtX5mW2vRVVFYRX6QtsqVRY"
 PROXY_URL = ENV.get("TELEGRAM_PROXY", "")
 MANAGER_CHAT_ID = 730367961
 B24 = "https://b24-ufslqf.bitrix24.ru/rest/1/wwaict4vpjhiku1s/"
